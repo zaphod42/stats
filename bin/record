@@ -1,0 +1,23 @@
+#!/usr/bin/ruby
+
+require 'stats'
+require 'yaml'
+require 'stats/last_run_info'
+require 'stats/pull_request_cycle_time'
+require 'stats/trello_list_sizes'
+require 'stats/csv_destination'
+
+MEASURES = {
+  "cycle-time" => Stats::PullRequestCycleTime,
+  "list-size" => Stats::TrelloListSizes
+}
+
+last_run = Stats::LastRunInfo.new 'last_run'
+
+config = YAML.load_file(ARGV[0])
+
+stats = Stats.new
+config.each do |measure|
+  stats.measure(MEASURES[measure["type"]].new(measure["config"]))
+end
+stats.record_to(Stats::CsvDestination.new(ARGV[1]), last_run)
